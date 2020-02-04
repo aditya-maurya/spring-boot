@@ -44,7 +44,7 @@ public class EmployeeController {
 
     }
 
-    @PutMapping("/update")
+    @PutMapping("/update/{id}")
     public Employee updateEmployee(@PathVariable("id") int
                                    id , @RequestBody Employee employee)
     {
