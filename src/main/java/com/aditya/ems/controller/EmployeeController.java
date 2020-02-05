@@ -3,7 +3,10 @@ package com.aditya.ems.controller;
 
 import com.aditya.ems.model.Employee;
 import com.aditya.ems.service.EmployeeService;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
+import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.netflix.hystrix.EnableHystrix;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -45,11 +48,34 @@ public class EmployeeController {
     }
 
     @PutMapping("/update/{id}")
+    @HystrixCommand(fallbackMethod = "errorDelayResponse", commandProperties = {@HystrixProperty(name="execution.isolation.thread.timeoutInMilliseconds", value = "1000")})
     public Employee updateEmployee(@PathVariable("id") int
                                    id , @RequestBody Employee employee)
+    { try {
+        Thread.sleep(400000);
+        return employeeService.updateEmployee(id, employee);
+    }catch (InterruptedException e)
     {
-        return  employeeService.updateEmployee(id, employee);
+        System.out.println("Data is awaiting");
     }
+        return employeeService.updateEmployee(id, employee);
+    }
+
+    private Employee errorDelayResponse(@PathVariable("id") int
+                                              id , @RequestBody Employee employee)
+    {
+        Employee employee1=new Employee();
+        employee1.setId(7);
+        employee1.setUserName("aaaa");
+        employee1.setFirstName("AAAAA");
+        employee1.setLastName("BBBBB");
+        employee1.setEmail("aaa@fmaal.com");
+        employee1.setSalary(344400);
+       return employee1;
+      //  return "Request is failed due to the taking long time";
+    }
+
+
 
     @DeleteMapping("/delete/{id}")
     public void deleteEmployee(@PathVariable("id") int id )
